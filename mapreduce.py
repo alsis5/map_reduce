@@ -42,23 +42,24 @@ def main ():
     if number_of_arguments <= 1:
         print "Usage: python main.py [text file]"
     else:
+        fl = FileLoader.FileLoader()
+        dp = DataProcessor.DataProcessor()
         for file in args[1:]:
             initial_time = time.time()
             global reduce_dict
             reduce_dict = dict()
-            fl = FileLoader.FileLoader()
-            dp = DataProcessor.DataProcessor()
-            for strip in fl.readFileByChunks(file, block_size=8192):
-                lock = threading.Lock()
-                strip = dp.cleanStrip (strip)
+            for content_array in fl.readFileByChunks(file, block_size=128, num_of_chunks=20):
                 mapping_threads = []
-                if (len(strip) > 0): # remove empty lines
-                    args = {"strip": strip, "lock": lock}
-                    thread = threading.Thread(kwargs = args ,target=mapping)
-                    mapping_threads.append(thread)
-                    thread.start()
-            for thread in mapping_threads:
-                thread.join()
+                for strip in content_array:
+                    lock = threading.Lock()
+                    strip = dp.cleanStrip (strip)
+                    if (len(strip) > 0): # remove empty lines
+                        args = {"strip": strip, "lock": lock}
+                        thread = threading.Thread(kwargs = args ,target=mapping)
+                        mapping_threads.append(thread)
+                        thread.start()
+                for thread in mapping_threads:
+                    thread.join()
 
             #printResult (reduce_dict)
             print "Input file:", file

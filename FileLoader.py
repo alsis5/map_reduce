@@ -12,14 +12,18 @@ class FileLoader:
         [strip.decode('utf8') for strip in content]
         return content
 
-    def readFileByChunks(self, path, block_size=1024):
+    def readFileByChunks(self, path, block_size=1024, num_of_chunks=10):
         with open(path, 'rb') as f:
             while True:
-                content = f.readline()
+                content_array = []
+                for i in range(num_of_chunks):
+                    content = f.readline()
+                    if content:
+                        content_array.append(content)
+                    else:
+                        if i > 0:
+                            yield content_array
+                        else:
+                            return
 
-                if content:
-                    #content = [x.strip('\n') for x in content]
-                    #print content
-                    yield content
-                else:
-                    return
+                yield content_array
