@@ -1,5 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+# Albert Soto i Serrano
+# sootto.5@gmail.com
+# Simple map reduce algorith implementation for word counting in text documents
+
 import sys
 import FileLoader
 import threading
