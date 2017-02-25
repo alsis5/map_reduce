@@ -1,4 +1,7 @@
-class FileLoaders:
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+class FileLoader:
     def __init__(self):
         pass
     def loadFile (self, file):
@@ -9,5 +12,14 @@ class FileLoaders:
         [strip.decode('utf8') for strip in content]
         return content
 
-    def loadFileByChunks (self, file, chunksize):
-        pass
+    def readFileByChunks(self, path, block_size=1024):
+        with open(path, 'rb') as f:
+            while True:
+                content = f.readline()
+
+                if content:
+                    #content = [x.strip('\n') for x in content]
+                    #print content
+                    yield content
+                else:
+                    return
