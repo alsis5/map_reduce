@@ -11,4 +11,3 @@ class FileLoaders:
 
     def loadFileByChunks (self, file, chunksize):
         pass
-        
