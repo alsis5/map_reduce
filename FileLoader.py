@@ -17,7 +17,13 @@ class FileLoader:
             while True:
                 content_array = []
                 for i in range(num_of_chunks):
-                    content = f.readline()
+                    content = f.read(block_size)
+                    while content[-1:] != ' ':
+                        nextf = f.read(1)
+                        if nextf:
+                            content+=nextf
+                        else:
+                            break
                     if content:
                         content_array.append(content)
                     else:
