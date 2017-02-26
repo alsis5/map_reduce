@@ -1,12 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+__author__ = "Albert Soto i Serrano (NIU 1361153)"
+__email__ = "albert.sotoi@e-campus.uab.cat"
 
 class DataProcessor:
     def __init__(self):
         pass
-
     def cleanStrip (self, strip):
+        # Lowercase all the characters
         clean_strip = strip.lower()
+        # Remove unwanted chars
         clean_strip = clean_strip.replace(".", " ")
         clean_strip = clean_strip.replace(",", " ")
         clean_strip = clean_strip.replace("\n", " ")
@@ -38,10 +41,5 @@ class DataProcessor:
         clean_strip = clean_strip.replace(";", " ")
         clean_strip = clean_strip.replace("- ", " ")
         clean_strip = clean_strip.replace(" -", " ")
-
-        legal_chars = "abcdefghijklmnñopqrstuvwxyzç1234567890·'"
-        for char in strip:
-            if char not in legal_chars:
-                char = ""
-
+        clean_strip = clean_strip.replace("*", " ")
         return clean_strip

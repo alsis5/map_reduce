@@ -1,41 +1,45 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# Map reduce algorith implementation to generate text document word histograms
+__author__ = "Albert Soto i Serrano (NIU 1361153)"
+__email__ = "albert.sotoi@e-campus.uab.cat"
+__version__ = "1.2.1"
 
-# Albert Soto i Serrano
-# sootto.5@gmail.com
-# Simple map reduce algorith implementation for word counting in text documents
-
+# Imports
 import sys
 import FileLoader
-import threading
 import time
 import DataProcessor
-
+from multiprocessing import Process, Manager
+import multiprocessing
+# Global dictionary where the reducing phase will converge
 reduce_dict = dict()
 
+# Reduce phase: receives a partial count of words and updates the result dictionary
+# Notice that python dictionary itself accomplishes the sorting and merging phases,
+# so there is no need to remove duplicated data or sorting as python dictionary is
+# a hash structure itself.
 def reduce (partial_count,lock=None):
-    lock.acquire()
     global reduce_dict
     for word in partial_count:
         if word in reduce_dict:
             reduce_dict[word]+=partial_count[word]
         else:
             reduce_dict[word]=partial_count[word]
-    lock.release()
-
-def mapping (strip = None, lock = None, dp=None):
+# Map phase: receives a splitted chunk of the text file and generates a
+# pair of word:count dictionary
+def mapping (strip = None, dp=None, results=None):
     if strip is not None:
         strip = dp.cleanStrip (strip)
         if (len(strip) > 0): # remove empty lines
             word_count_dictionary = dict()
             words = strip.split()
-            #print "Strip len:", len(strip), strip
             for word in words:
                 if word in word_count_dictionary:
                     word_count_dictionary[word]+=1
                 else:
                     word_count_dictionary[word]=1
-            reduce(word_count_dictionary, lock)
+            results.append(word_count_dictionary)
 
 def printResult (result):
     sortednames=sorted(result.keys(), key=lambda x:x.lower())
@@ -51,22 +55,23 @@ def main ():
     else:
         fl = FileLoader.FileLoader()
         dp = DataProcessor.DataProcessor()
+        manager = Manager()
         for file in args[1:]:
             initial_time = time.time()
             global reduce_dict
             reduce_dict = dict()
-            for content_array in fl.readFileByChunks(file, block_size=512, num_of_chunks=8):
-                mapping_threads = []
-                for strip in content_array:
-                    lock = threading.Lock()
-                    args = {"strip": strip, "lock": lock, "dp": dp}
-                    thread = threading.Thread(kwargs = args ,target=mapping)
-                    mapping_threads.append(thread)
+            map_processes = []
+            partial_results = manager.list()
+            for content_chunks in fl.readFileByChunks(file, block_size=102400, num_of_chunks=multiprocessing.cpu_count()):
+                for strip in content_chunks:
+                    thread = Process(target=mapping, args=(strip, dp, partial_results))
+                    map_processes.append(thread)
                     thread.start()
-                for thread in mapping_threads:
-                    thread.join()
-
-            #printResult (reduce_dict)
+            for process in map_processes:
+                thread.join()
+            for partial_result in partial_results:
+                reduce(partial_count=partial_result)
+            printResult (reduce_dict)
             print "Input file:", file
             print "Total words:", len(reduce_dict)
             print "Elapsed time:",time.time()-initial_time
