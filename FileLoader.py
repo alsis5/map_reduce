@@ -20,7 +20,7 @@ class FileLoader:
                 content_array = []
                 for i in range(num_of_chunks):
                     content = f.read(block_size)
-                    while content[-1:] not in string.whitespace:
+                    while content[-1:] not in string.whitespace: #end of word
                         nextf = f.read(1)
                         if nextf:
                             content+=nextf

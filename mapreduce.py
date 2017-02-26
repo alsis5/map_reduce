@@ -3,7 +3,7 @@
 # Map reduce algorith implementation to generate text document word histograms
 __author__ = "Albert Soto i Serrano (NIU 1361153)"
 __email__ = "albert.sotoi@e-campus.uab.cat"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 # Imports
 import sys
@@ -15,18 +15,18 @@ import multiprocessing
 # Global dictionary where the reducing phase will converge
 reduce_dict = dict()
 
-# Reduce phase: receives a partial count of words and updates the result dictionary
-# Notice that python dictionary itself accomplishes the sorting and merging phases,
-# so there is no need to remove duplicated data or sorting as python dictionary is
-# a hash structure itself.
-def reduce (partial_count,lock=None):
+# Reduction phase: receives a partial count of words and updates the result dictionary
+# Notice that python dictionary by itself accomplishes the sorting and merging phases,
+# so there is no need to remove/sort duplicated data as python dictionary is
+# a hashing structure.
+def reduce (partial_count):
     global reduce_dict
     for word in partial_count:
         if word in reduce_dict:
             reduce_dict[word]+=partial_count[word]
         else:
             reduce_dict[word]=partial_count[word]
-# Map phase: receives a splitted chunk of the text file and generates a
+# Mapping phase: receives a splitted chunk of the text file and generates a
 # pair of word:count dictionary
 def mapping (strip = None, dp=None, results=None):
     if strip is not None:
@@ -41,15 +41,15 @@ def mapping (strip = None, dp=None, results=None):
                     word_count_dictionary[word]=1
             results.append(word_count_dictionary)
 
+# Print the results alphanumerically
 def printResult (result):
     sortednames=sorted(result.keys(), key=lambda x:x.lower())
     for word in sortednames:
         print "\t", result[word], word
 
 def main ():
-    print "----------------------------\n----\tMap Reduce\t----\n----------------------------"
     args = sys.argv;
-    number_of_arguments = len (args)
+    number_of_arguments = len(args)
     if number_of_arguments <= 1:
         print "Usage: python main.py [text file]"
     else:
@@ -64,17 +64,18 @@ def main ():
             partial_results = manager.list()
             for content_chunks in fl.readFileByChunks(file, block_size=102400, num_of_chunks=multiprocessing.cpu_count()):
                 for strip in content_chunks:
-                    thread = Process(target=mapping, args=(strip, dp, partial_results))
-                    map_processes.append(thread)
-                    thread.start()
+                    process = Process(target=mapping, args=(strip, dp, partial_results))
+                    map_processes.append(process)
+                    process.start()
             for process in map_processes:
-                thread.join()
+                process.join()
             for partial_result in partial_results:
                 reduce(partial_count=partial_result)
+
+            print file+":"
             printResult (reduce_dict)
-            print "Input file:", file
-            print "Total words:", len(reduce_dict)
-            print "Elapsed time:",time.time()-initial_time
+            #print "Total words:", len(reduce_dict)
+            #print "Elapsed time:",time.time()-initial_time
 
 if __name__ == "__main__":
     main()
