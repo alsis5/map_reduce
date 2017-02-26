@@ -3,7 +3,7 @@
 # Map reduce algorith implementation to generate text document word histograms
 __author__ = "Albert Soto i Serrano (NIU 1361153)"
 __email__ = "albert.sotoi@e-campus.uab.cat"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 import sys
 import FileLoader
@@ -22,12 +22,10 @@ def processArgs (args):
     for arg in args:
         if arg == "-l":
             letter_flag = True
-            #args.remove(arg)
             args_to_remove.append(arg)
         elif arg == "-j":
             join_flag = True
             args_to_remove.append(arg)
-            # args.remove(arg)
         else:
             pass
     [args.remove(arg) for arg in args_to_remove]
@@ -66,6 +64,7 @@ def mapping (strip = None, dp=None, results=None, letter_flag=False):
                             word_count_dictionary[letter]+=1
                         else:
                             word_count_dictionary[letter]=1
+
             results.append(word_count_dictionary)
 
 # Print the results alphanumerically
@@ -93,11 +92,12 @@ def main ():
                 reduce_dict = dict()
             map_processes = []
             partial_results = manager.list()
-            for content_chunks in fl.readFileByChunks(file, block_size=102400, num_of_chunks=multiprocessing.cpu_count()):
+            for content_chunks in fl.readFileByChunks(file, block_size=4*1024*1024, num_of_chunks=1):
                 for strip in content_chunks:
                     process = Process(target=mapping, args=(strip, dp, partial_results, letter_flag))
                     map_processes.append(process)
                     process.start()
+            print len(map_processes)
             for process in map_processes:
                 process.join()
             for partial_result in partial_results:
@@ -105,9 +105,9 @@ def main ():
 
             if join_flag == False:
                 print file+":"
-                #printResult (reduce_dict)
-                print "Total words:", len(reduce_dict)
-                print "Elapsed time:",time.time()-initial_time
+                printResult (reduce_dict)
+                #print "Total words:", len(reduce_dict)
+                #print "Elapsed time:",time.time()-initial_time
         if join_flag == True:
             print str([arg for arg in args[1:]])+":"
             printResult (reduce_dict)
