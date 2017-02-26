@@ -42,4 +42,9 @@ class DataProcessor:
         clean_strip = clean_strip.replace("- ", " ")
         clean_strip = clean_strip.replace(" -", " ")
         clean_strip = clean_strip.replace("*", " ")
+        clean_strip = clean_strip.replace("[", " ")
+        clean_strip = clean_strip.replace("]", " ")
+        clean_strip = clean_strip.replace("''", " ")
+        clean_strip = clean_strip.replace("´´", " ")
+        clean_strip = clean_strip.replace("``", " ")
         return clean_strip

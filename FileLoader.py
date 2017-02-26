@@ -20,14 +20,20 @@ class FileLoader:
                 content_array = []
                 for i in range(num_of_chunks):
                     content = f.read(block_size)
+                    flag = False
                     while content[-1:] not in string.whitespace: #end of word
+                        flag = True
                         nextf = f.read(1)
                         if nextf:
                             content+=nextf
                         else:
                             break
                     if content:
-                        content_array.append(content)
+                        if flag:
+                            if nextf:
+                                content_array.append(content)
+                        else:
+                            content_array.append(content)
                     else:
                         if i > 0:
                             yield content_array
